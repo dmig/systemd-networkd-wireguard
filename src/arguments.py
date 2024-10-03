@@ -62,6 +62,13 @@ class PathType(object):
 def get_argparser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument(
+        "-i --intrface",
+        dest="wg_iface",
+        type=str,
+        default="wg0",
+        help="WireGuard interface name",
+    )
+    parser.add_argument(
         "-w --wg-config",
         dest="wg_config_dir",
         type=PathType(True, "dir"),
@@ -76,10 +83,10 @@ def get_argparser() -> argparse.ArgumentParser:
         help='WireGuard private key file name (default: <ifname>-key)',
     )
     parser.add_argument(
-        "-i --intrface",
-        dest="wg_iface",
-        type=str,
-        default="wg0",
-        help="WireGuard interface name",
+        "-n --dry-run",
+        dest="dry_run",
+        default=False,
+        action='store_true',
+        help='Make no changes',
     )
     return parser
