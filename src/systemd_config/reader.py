@@ -1,9 +1,9 @@
 import re
 from typing import IO, Any, Callable
 
-from systemd_config.caseless_dict import CaselessDict
-from systemd_config.exceptions import IncompleteMultilineError, SectionlessKeyError
-from systemd_config.typedefs import keyProcessor, sectionProcessor, sectionType
+from .caseless_dict import CaselessDict
+from .exceptions import IncompleteMultilineError, SectionlessKeyError
+from .typedefs import keyProcessor, sectionProcessor, sectionType
 
 _MATCH_SECTION = re.compile(r"^\[(.+)\]$")
 _MATCH_COMMENT = re.compile(r"^[#;]")
@@ -33,6 +33,7 @@ def _set_value(
     if processor:
         v = processor(v)
 
+    # TODO empty value resets
     if k in dict_:
         _assign_existing(dict_, k, v, concat)
     else:
@@ -126,6 +127,7 @@ def parse(
                 raise SectionlessKeyError(ln)
 
             key = kv_pair.group("key").strip()
+            # TODO unquote
             value = kv_pair.group("value").strip()
 
             is_multiline = value.endswith("\\")

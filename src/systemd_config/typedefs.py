@@ -1,6 +1,6 @@
 from typing import Any, Callable, TypeAlias
 
-from systemd_config.caseless_dict import CaselessDict
+from .caseless_dict import CaselessDict
 
 kvType: TypeAlias = CaselessDict[str, Any]
 sectionContent: TypeAlias = kvType | list[kvType]
