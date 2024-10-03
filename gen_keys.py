@@ -12,7 +12,10 @@ if __name__ == '__main__':
         args.wg_key_file = args.wg_iface + '-key'
 
     pk: Path = args.wg_config_dir / args.wg_key_file
-    if not os.access(pk if pk.exists() else pk.parent, os.W_OK):
+    try:
+        if not os.access(pk if pk.exists() else pk.parent, os.W_OK):
+            raise PermissionError()
+    except PermissionError:
         print(f'Key file {pk} is not writable, exiting.', file=sys.stderr)
         sys.exit(os.EX_NOPERM)
 
