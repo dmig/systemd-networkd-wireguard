@@ -20,7 +20,11 @@ if __name__ == '__main__':
         sys.exit(os.EX_NOPERM)
 
     priv_key = check_output(['wg', 'genkey'])
-    pk.write_bytes(priv_key)
+    print('Writing', pk)
+    if not args.dry_run:
+        pk.write_bytes(priv_key)
     pk = pk.with_suffix('.pub')
     public_key = check_output(['wg', 'pubkey'], input=priv_key)
-    pk.write_bytes(public_key)
+    print('Writing', pk)
+    if not args.dry_run:
+        pk.write_bytes(public_key)
