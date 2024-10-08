@@ -11,6 +11,11 @@ _MATCH_KEY_VALUE = re.compile(r"^(?P<key>[\w\-]+)\s*=\s*(?P<value>.*)")
 
 
 def _assign_existing(dict_: MutableMapping[str, Any], k: str, v: Any, concat=False):
+    if not v:
+        # empty value resets
+        dict_[k] = ''
+        return
+
     if concat and isinstance(v, str) and isinstance(dict_[k], str):
         dict_[k] += v
         return
@@ -33,7 +38,6 @@ def _set_value(
     if processor:
         v = processor(v)
 
-    # TODO empty value resets
     if k in dict_:
         _assign_existing(dict_, k, v, concat)
     else:
@@ -71,6 +75,8 @@ def parse(
     - multiline values are concatenated into a single string (excluding comments)
     - duplicate sections become a `list` of sections contents under a single key
     - duplicate keys become a `list` of values under a single key
+    - empty value resets previously set values
+    - empty section (header with no keys) will be ignored
     - section and key comparison is
       [caseless](https://docs.python.org/3/library/stdtypes.html#str.casefold), but preserving case;
       first occurence met in file will be used as a key
