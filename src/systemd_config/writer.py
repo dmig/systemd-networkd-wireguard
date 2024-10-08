@@ -28,7 +28,7 @@ def dump(fp: IO, structure: sectionType) -> int:
                 for v in value:
                     # TODO split long lines
                     # TODO escape if needed
-                    chars_written += fp.write(f'{key} = v"\n')
+                    chars_written += fp.write(f'{key} = {v}\n')
             chars_written += fp.write("\n")
 
     return chars_written
