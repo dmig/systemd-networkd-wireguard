@@ -1,5 +1,5 @@
 import re
-from typing import IO, Any, Callable
+from typing import IO, Any, Callable, MutableMapping
 
 from .caseless_dict import CaselessDict
 from .exceptions import IncompleteMultilineError, SectionlessKeyError
@@ -10,7 +10,7 @@ _MATCH_COMMENT = re.compile(r"^[#;]")
 _MATCH_KEY_VALUE = re.compile(r"^(?P<key>[\w\-]+)\s*=\s*(?P<value>.*)")
 
 
-def _assign_existing(dict_: CaselessDict[str, Any], k: str, v: Any, concat=False):
+def _assign_existing(dict_: MutableMapping[str, Any], k: str, v: Any, concat=False):
     if concat and isinstance(v, str) and isinstance(dict_[k], str):
         dict_[k] += v
         return
@@ -24,7 +24,7 @@ def _assign_existing(dict_: CaselessDict[str, Any], k: str, v: Any, concat=False
 
 
 def _set_value(
-    dict_: CaselessDict[str, Any],
+    dict_: MutableMapping[str, Any],
     k: str,
     v: Any,
     processor: Callable | None = None,
