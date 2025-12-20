@@ -6,6 +6,7 @@ VT = TypeVar("VT")
 
 class CaselessDict(MutableMapping, Generic[KT, VT]):
     """A caseless ``dict``-like object.
+
     Based on [implementation](https://github.com/kennethreitz/requests/blob/master/src/requests/structures.py#L13)
     in the Requests library.
 

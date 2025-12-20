@@ -13,7 +13,7 @@ _MATCH_KEY_VALUE = re.compile(r"^(?P<key>[\w\-]+)\s*=\s*(?P<value>.*)")
 def _assign_existing(dict_: MutableMapping[str, Any], k: str, v: Any, concat=False):
     if not v:
         # empty value resets
-        dict_[k] = ''
+        dict_[k] = ""
         return
 
     if concat and isinstance(v, str) and isinstance(dict_[k], str):
@@ -151,7 +151,7 @@ def parse(
     if is_multiline and (
         processor := (kp.get(f"{current_section}.{current_key}") or kp.get(current_key))
     ):
-        # apply processor if multiline value is unfinished
+        # apply processor if multiline value was unfinished
         section_content[current_key] = processor(section_content[current_key])
 
     if current_section and section_content:
