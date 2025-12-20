@@ -64,38 +64,9 @@ def parse(
     :raises SyntaxError: if line doesn't match expected syntax
     :raises SectionlessKeyError: if a key definition appears before any section
     :raises IncompleteMultilineError: if a multiline value wasn't finished
-
-    More information on Systemd file syntax here:
-    https://www.freedesktop.org/software/systemd/man/256/systemd.syntax.html.
-
-    Features:
-    - beginning and trailing whitespace is ignored
-    - inline comments are not supported (as systemd syntax defines)
-    - comments inside multiline values are supported (as systemd syntax defines)
-    - multiline values are concatenated into a single string (excluding comments)
-    - duplicate sections become a `list` of sections contents under a single key
-    - duplicate keys become a `list` of values under a single key
-    - empty value resets previously set values
-    - empty section (header with no keys) will be ignored
-    - section and key comparison is
-      [caseless](https://docs.python.org/3/library/stdtypes.html#str.casefold), but preserving case;
-      first occurence met in file will be used as a key
-
-    Example:
-    ```
-        with open("wireguard.netdev") as fp:
-            config = parse(
-                fp,
-                # force-convert WireguardPeer section to list
-                {"Wireguardpeer": lambda v: v if isinstance(v, list) else [v]},
-                # split AllowedIPs by ','
-                {"allowedips": lambda v: v if isinstance(v, list) else list(filter(None, v.split(','))),
-                # convert ListenPort to `int`
-                'listenport': int},
-            )
-    ```
     """
-    structure: sectionType = CaselessDict()
+    structure: sectionsType = CaselessDict()
+    comments: commentsType = {}
 
     current_section = ""
     section_content = CaselessDict()
