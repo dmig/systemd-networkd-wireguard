@@ -70,7 +70,7 @@ def parse(
 
     current_section = ""
     section_content = CaselessDict()
-    is_multiline = False
+    is_reading_multiline = False
     current_key = ""
     kp = CaselessDict(key_processors)
     sp = CaselessDict(section_processors)
@@ -82,7 +82,7 @@ def parse(
             continue
 
         if section := _MATCH_SECTION.match(line):
-            if is_multiline:
+            if is_reading_multiline:
                 raise IncompleteMultilineError(ln)
 
             if current_section and section_content:
@@ -98,7 +98,7 @@ def parse(
             continue
 
         if kv_pair := _MATCH_KEY_VALUE.match(line):
-            if is_multiline:
+            if is_reading_multiline:
                 raise IncompleteMultilineError(ln)
             if not current_section:
                 raise SectionlessKeyError(ln)
@@ -107,8 +107,8 @@ def parse(
             # TODO unquote
             value = kv_pair.group("value").strip()
 
-            is_multiline = value.endswith("\\")
-            if is_multiline:
+            is_reading_multiline = value.endswith("\\")
+            if is_reading_multiline:
                 value = value[:-1]
                 current_key = key
 
@@ -118,17 +118,17 @@ def parse(
                 value,
                 # multiline values must be processed at the end
                 None
-                if is_multiline
+                if is_reading_multiline
                 else (kp.get(f"{current_section}.{key}") or kp.get(key)),
-                is_multiline,
+                is_reading_multiline,
             )
 
             continue
 
-        if is_multiline:
+        if is_reading_multiline:
             value = line
-            is_multiline = value.endswith("\\")
-            if is_multiline:
+            is_reading_multiline = value.endswith("\\")
+            if is_reading_multiline:
                 value = value[:-1]
 
             _set_value(
@@ -137,18 +137,18 @@ def parse(
                 value,
                 # multiline values must be processed at the end
                 None
-                if is_multiline
+                if is_reading_multiline
                 else (
                     kp.get(f"{current_section}.{current_key}") or kp.get(current_key)
                 ),
-                is_multiline,
+                is_reading_multiline,
             )
             continue
 
         if line:
             raise SyntaxError(line, ln)
 
-    if is_multiline and (
+    if is_reading_multiline and (
         processor := (kp.get(f"{current_section}.{current_key}") or kp.get(current_key))
     ):
         # apply processor if multiline value was unfinished
