@@ -2,8 +2,8 @@ import re
 from typing import IO, Any, Callable, MutableMapping
 
 from .caseless_dict import CaselessDict
-from .exceptions import IncompleteMultilineError, SectionlessKeyError
-from .typedefs import keyProcessor, sectionProcessor, sectionType
+from .exceptions import IncompleteMultilineError, SectionlessKeyError, SyntaxError
+from .typedefs import commentsType, keyProcessor, sectionProcessor, sectionsType
 
 _MATCH_SECTION = re.compile(r"^\[(.+)\]$")
 _MATCH_COMMENT = re.compile(r"^[#;]")
@@ -48,7 +48,8 @@ def parse(
     fp: IO,
     section_processors: dict[str, sectionProcessor] = {},
     key_processors: dict[str, keyProcessor] = {},
-) -> sectionType:
+    preserve_comments: bool = False,
+) -> tuple[sectionsType, commentsType]:
     """Systemd file parser.
 
     Parses Systemd unit files into python `dict`.
@@ -60,7 +61,9 @@ def parse(
       value types or validation;
       `key_name` may be a `section_name.key_name` for specific key targeting, or a `key_name` for
       global key targeting, `section_name.key_name` has higher priority; matching is caseless.
-    :return: sectionType
+    :param preserve_comments bool: whether to collect comments and return them as the second
+      member of return value.
+    :return: tuple[sectionsType, commentsType]
     :raises SyntaxError: if line doesn't match expected syntax
     :raises SectionlessKeyError: if a key definition appears before any section
     :raises IncompleteMultilineError: if a multiline value wasn't finished
@@ -72,6 +75,7 @@ def parse(
     section_content = CaselessDict()
     is_reading_multiline = False
     current_key = ""
+    current_comments: list[str] = []
     kp = CaselessDict(key_processors)
     sp = CaselessDict(section_processors)
 
@@ -79,11 +83,19 @@ def parse(
         line = line.strip()
 
         if _MATCH_COMMENT.match(line):
+            if preserve_comments:
+                current_comments.append(line)
             continue
 
         if section := _MATCH_SECTION.match(line):
             if is_reading_multiline:
                 raise IncompleteMultilineError(ln)
+
+            section = section.group(1)
+
+            if current_comments:
+                comments[(section.casefold(), None)] = current_comments
+                current_comments = []
 
             if current_section and section_content:
                 _set_value(
@@ -94,7 +106,7 @@ def parse(
                 )
 
             section_content = CaselessDict()
-            current_section = section.group(1)
+            current_section = section
             continue
 
         if kv_pair := _MATCH_KEY_VALUE.match(line):
@@ -104,6 +116,13 @@ def parse(
                 raise SectionlessKeyError(ln)
 
             key = kv_pair.group("key").strip()
+
+            if current_comments:
+                comments[(current_section.casefold(), key.casefold())] = (
+                    current_comments
+                )
+                current_comments = []
+
             # TODO unquote
             value = kv_pair.group("value").strip()
 
@@ -130,6 +149,13 @@ def parse(
             is_reading_multiline = value.endswith("\\")
             if is_reading_multiline:
                 value = value[:-1]
+            elif current_comments:
+                # finished reading multiline value and collected some comments in process:
+                # keep them with current key comments
+                comments.setdefault(
+                    (current_section.casefold(), current_key.casefold()), []
+                ).extend(current_comments)
+                current_comments = []
 
             _set_value(
                 section_content,
@@ -161,4 +187,8 @@ def parse(
             section_content,
             sp.get(current_section),
         )
-    return structure
+
+    if current_comments:
+        comments[(None, None)] = current_comments
+
+    return structure, comments
