@@ -3,7 +3,6 @@ from typing import IO
 from .typedefs import commentsType, sectionsType
 
 
-
 def dump(fp: IO, structure: sectionsType, comments: commentsType | None = None) -> int:
     """Simple Systemd file writer.
 

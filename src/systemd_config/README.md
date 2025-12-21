@@ -52,7 +52,8 @@ with open("wireguard.netdev") as fp:
         # force-convert WireguardPeer section to list
         {"Wireguardpeer": lambda v: v if isinstance(v, list) else [v]},
         # split AllowedIPs by ','
-        {"allowedips": lambda v: v if isinstance(v, list) else list(filter(None, v.split(','))),
+        {"allowedips": lambda v: v if isinstance(v, list)
+                       else list(filter(None, v.split(','))),
         # convert ListenPort to `int`
         'listenport': int},
     )
