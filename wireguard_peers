@@ -1,0 +1,57 @@
+#! /usr/bin/env python
+"""Configure Wireguard Peers."""
+
+import sys
+from contextlib import nullcontext
+from pathlib import Path
+
+from src.arguments import get_peer_argparser
+from src.systemd_config.caseless_dict import CaselessDict
+from src.systemd_config.reader import parse
+from src.systemd_config.writer import dump
+
+
+def _config_action_msg(exists: bool, ignored: bool) -> str:
+    action = "recreating" if ignored else "loading"
+    return "exist, " + action if exists else "does not exist, creating"
+
+
+if __name__ == "__main__":
+    parser = get_peer_argparser(__doc__)
+    args = parser.parse_args()
+
+    print(args)
+
+    netdev_fn: str = args.networkd_config_prefix + ".netdev_config"
+    netdev_file: Path = args.networkd_config_dir / netdev_fn
+
+    if not netdev_file.exists():
+        print("Error:", netdev_file, "not readable!", file=sys.stderr)
+        sys.exit(1)
+
+    with netdev_file.open() as fp:
+        netdev_config, netdev_comments = parse(fp, preserve_comments=True)
+    print(netdev_config)
+
+    # section names are case-sensitive, ensure proper names
+    section = "WireGuardPeer"
+    if section in netdev_config and section not in set(netdev_config.keys()):
+        netdev_config.rename(section, section)
+
+    netdev_section = netdev_config.setdefault("WireGuard", CaselessDict())
+    if "listen_port" in args:
+        netdev_section["ListenPort"] = args.listen_port
+    netdev_config.setdefault("WireGuard", CaselessDict())["PrivateKeyFile"] = (
+        args.key_dir / args.private_key_file
+    )
+
+    if args.dry_run:
+        print("#", netdev_fn)
+        context_manager = nullcontext(sys.stdout)
+    else:
+        context_manager = netdev_file.open("w")
+
+    with context_manager as fp:
+        dump(fp, netdev_config, netdev_comments)
+    if args.verbose and not args.dry_run:
+        print(netdev_fn, "saved")

@@ -6,9 +6,9 @@
 
 1. Server confifguration
    1. [v] Create server keys
-   2. [ ] Set network subnets
-   3. [ ] set listen port
-   4. [ ] set interface name and description
+   2. [v] Set network subnets
+   3. [v] set listen port
+   4. [v] set interface name and description
 2. Peer actions
    1. [ ] create peer
    2. [ ] set allowedips
