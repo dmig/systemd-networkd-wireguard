@@ -94,7 +94,14 @@ if __name__ == "__main__":
     network_section["Address"] = args.network or DEFAULT_ADDR
     if "dns" in args and args.dns:
         network_section["DNS"] = args.dns
+        if "dns_domains" in args and args.dns_domains:
+            network_section["Domains"] = args.dns_domains
+
     network_section["IPMasquerade"] = args.ip_masquerade
+
+    if "route" in args and args.route:
+        network_section = network_config.setdefault("Route", CaselessDict())
+        network_section["Destination"] = args.route
 
     if args.dry_run:
         print("#", network_fn)

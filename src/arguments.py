@@ -105,6 +105,7 @@ class SubstitutingArgumentParser(argparse.ArgumentParser):
             help="Networkd .netdev and .network files prefix",
         )
         self.add_key_dir_argument()
+        self.add_pk_file_argument()
 
     def add_key_dir_argument(self):
         self.add_argument(
@@ -112,6 +113,14 @@ class SubstitutingArgumentParser(argparse.ArgumentParser):
             type=PathType(True, "dir"),
             default="/etc/wireguard",
             help="Wireguard key files directory",
+        )
+
+    def add_pk_file_argument(self):
+        self.add_argument(
+            "--private-key-file",
+            type=str,
+            default="%s.key",
+            help="Wireguard private key file name",
         )
 
     def parse_args(self, args=None, namespace=None):
@@ -164,12 +173,6 @@ def get_netdev_argparser(description: str | None = None) -> SubstitutingArgument
     )
     parser.add_path_arguments()
     parser.add_argument(
-        "--private-key-file",
-        type=str,
-        default="%s.key",
-        help="Wireguard private key file name",
-    )
-    parser.add_argument(
         "--listen-port",
         type=int,
         default=argparse.SUPPRESS,
@@ -186,12 +189,29 @@ def get_netdev_argparser(description: str | None = None) -> SubstitutingArgument
     )
     parser.add_argument(
         "--dns",
-        type=ipaddress.ip_network,
+        type=ipaddress.ip_address,
         default=argparse.SUPPRESS,
         action="append",
         help="A DNS server address, which must be in the format described in inet_pton(3). "
         "This option may be specified more than once. "
         "See more: https://freedesktop.org/software/systemd/man/latest/systemd.network.html#DNS=",
+    )
+    parser.add_argument(
+        "--dns-domains",
+        type=str,
+        default=argparse.SUPPRESS,
+        action="append",
+        help="A list of domains for DNS lookups.This option may be specified more than once. "
+        "See more: https://freedesktop.org/software/systemd/man/latest/systemd.network.html#Domains=",
+    )
+    parser.add_argument(
+        "--route",
+        type=ipaddress.ip_network,
+        default=argparse.SUPPRESS,
+        action="append",
+        help="The destination prefix of the route. Possibly followed by a slash and the prefix length. "
+        "This option may be specified more than once. "
+        "See more: https://freedesktop.org/software/systemd/man/latest/systemd.network.html#Destination=",
     )
     parser.add_argument(
         "--mtu-size",
@@ -204,8 +224,7 @@ def get_netdev_argparser(description: str | None = None) -> SubstitutingArgument
         "--ip-masquerade",
         choices=("ipv4", "ipv6", "both", "no"),
         default="both",
-        help="Enable masquerade if the server is expected to be used as a gateway to the Internet."
-        "Set to 'no' to tonfi",
+        help="Enable masquerade if the server is expected to be used as a gateway to the Internet.",
     )
     parser.add_argument(
         "--force-new",
@@ -220,11 +239,6 @@ def get_keys_argparser(description: str | None = None) -> SubstitutingArgumentPa
     parser = SubstitutingArgumentParser(description=description)
     parser.add_base_arguments()
     parser.add_key_dir_argument()
-    parser.add_argument(
-        "--private-key-file",
-        type=str,
-        default="%s.key",
-        help="Wireguard private key file name",
-    )
+    parser.add_pk_file_argument()
 
     return parser
