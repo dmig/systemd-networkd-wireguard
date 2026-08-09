@@ -20,9 +20,7 @@ if __name__ == "__main__":
     parser = get_peer_argparser(__doc__)
     args = parser.parse_args()
 
-    print(args)
-
-    netdev_fn: str = args.networkd_config_prefix + ".netdev_config"
+    netdev_fn: str = args.networkd_config_prefix + ".netdev"
     netdev_file: Path = args.networkd_config_dir / netdev_fn
 
     if not netdev_file.exists():
@@ -31,7 +29,6 @@ if __name__ == "__main__":
 
     with netdev_file.open() as fp:
         netdev_config, netdev_comments = parse(fp, preserve_comments=True)
-    print(netdev_config)
 
     # section names are case-sensitive, ensure proper names
     section = "WireGuardPeer"

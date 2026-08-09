@@ -20,9 +20,9 @@ if __name__ == "__main__":
     parser = get_netdev_argparser(__doc__)
     args = parser.parse_args()
 
-    netdev_fn: str = args.networkd_config_prefix + ".netdev_config"
+    netdev_fn: str = args.networkd_config_prefix + ".netdev"
     netdev_file: Path = args.networkd_config_dir / netdev_fn
-    network_fn: str = args.networkd_config_prefix + ".network_config"
+    network_fn: str = args.networkd_config_prefix + ".network"
     network_file: Path = args.networkd_config_dir / network_fn
 
     if args.verbose:
